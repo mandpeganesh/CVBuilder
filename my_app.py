@@ -7,6 +7,7 @@ It uses the python-docx library to create a Word document and pyttsx3 for text-t
 from docx import Document
 from docx.shared import Inches
 import pyttsx3
+import os
 
 
 def speak(text):
@@ -16,13 +17,19 @@ def speak(text):
     Args:
         text (str): The text to be spoken.
     """
-    pyttsx3.speak(text)
-    
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
+
+
 # Create a new Document
 document = Document()
 
-# Add profile picture
-document.add_picture('me.jpg', width=Inches(2.0))
+# Add profile picture if available
+if os.path.exists('me.jpg'):
+    document.add_picture('me.jpg', width=Inches(2.0))
+else:
+    print('Profile picture not found. Skipping.')
 
 # Collect personal information
 name = input('What is your name? ')
@@ -36,62 +43,51 @@ document.add_paragraph(name + ' | ' + phone_number + ' | ' + email)
 
 # Add 'About Me' section
 document.add_heading('About Me')
-about_me = input('Tell me about yourself? ')
+about_me = input('Tell me about yourself: ')
 document.add_paragraph(about_me)
 
+# Function to add work experience
+def add_experience():
+    company = input('Enter company: ')
+    from_date = input('Enter start date: ')
+    to_date = input('Enter end date: ')
+    experience_details = input('Describe your experience at ' + company + ': ')
+    
+    p = document.add_paragraph()
+    p.add_run(company + '  ').bold = True
+    p.add_run(from_date + '-' + to_date + '\n').italic = True
+    p.add_run(experience_details)
 
 # Add work experience section
 document.add_heading('Work Experience')
-p = document.add_paragraph()
 
-company = input('Enter company: ')
-from_date = input('Enter start date: ')
-to_date  = input('Enter to date: ')
-
-p.add_run(company + '  ').bold = True
-p.add_run(from_date + '-' + to_date + '\n').italic = True
-
-experience_details = input('Describe your experience at ' + company + ': ')
-p.add_run(experience_details)
-
-# more experiences
 while True:
+    add_experience()
     has_more_experiences = input('Do you have more experiences? Yes or No: ')
-    if has_more_experiences.lower() == 'yes':
-        p = document.add_paragraph()
-
-        company = input('Enter company: ')
-        from_date = input('Enter start date: ')
-        to_date  = input('Enter to date: ')
-
-        p.add_run(company + '  ').bold = True
-        p.add_run(from_date + '-' + to_date + '\n').italic = True
-
-        experience_details = input('Describe your experience at ' + company + ': ')
-        p.add_run(experience_details)
-    else:
+    if has_more_experiences.lower() != 'yes':
         break
-    
-# Add skills
+
+# Function to add skills
+def add_skill():
+    skill = input('Enter skill: ')
+    p = document.add_paragraph(skill)
+    p.style = 'List Bullet'
+
+# Add skills section
 document.add_heading('Skills')
-skill = input('Enter skill: ')
-p = document.add_paragraph(skill)
-p.style = 'List Bullet'
 
 while True:
+    add_skill()
     has_more_skills = input('Do you have more skills? Yes or No: ')
-    if has_more_skills.lower() == 'yes':
-        skill = input('Enter skill: ')
-        p = document.add_paragraph(skill)
-        p.style = 'List Bullet'
-    else:
+    if has_more_skills.lower() != 'yes':
         break
-    
-# footer
+
+# Footer section
 section = document.sections[0]
 footer = section.footer
 p = footer.paragraphs[0]
 p.text = 'CV generated using GNM\'s CV generator'
 
 # Save the document
-document.save('cv.docx')
+document_name = input('Enter the name for your CV file (e.g., my_cv.docx): ')
+document.save(document_name)
